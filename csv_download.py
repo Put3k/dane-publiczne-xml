@@ -75,9 +75,15 @@ def main():
 
 if __name__ == '__main__':
     # main()
+    from datetime import datetime
+    import os
+    base_path_public_path = '/home/kacper/projects/dane-publiczne'
+    today = datetime.today().strftime('%Y-%m-%d')
+    file_name = f'ceny-ofertowe-mieszkan-dewelopera-arcus-{today}.csv'
+    file_path = os.path.join(base_path_public_path, file_name)
     download_file(
         sa_json_path='/home/kacper/projects/dane-publiczne/pod-manage-db493003b6e1.json',
         file_id='1PtFy7D19QbFlH5sBajwTNrDj6MCLFjct3EaijxzctNo',
-        out_path='/home/kacper/projects/dane-publiczne/result.csv'
+        out_path=file_path
     )
 
