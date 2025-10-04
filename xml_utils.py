@@ -101,8 +101,6 @@ def validate_xml_against_schema(xml_doc) -> bool:
 if __name__ == '__main__':
     in_file = 'Przykład_3_kolejne_publikacje_v.1.13_21.08.2025.xml'
 
-    # Dodanie nowego zasobu ręcznie
-
     # TREE
     tree = ET.parse(in_file)
     root = tree.getroot()
