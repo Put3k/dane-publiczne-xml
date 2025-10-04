@@ -2,7 +2,7 @@ import requests
 import xml.etree.ElementTree as ET
 from lxml import etree
 from dataclasses import dataclass, field
-from typing import List
+from typing import List, Optional
 
 # ======= MODELE =======
 
@@ -17,18 +17,18 @@ class Resource:
 
     # Constant
     status: str = 'published'
-    title_pl: str = 'Ceny ofertowe mieszkań dewelopera {developer} w {year} r.'
-    title_en: str = "Offer prices of apartments of developer {developer} in {year}."
+    title_pl: str = 'Ceny ofertowe mieszkań dewelopera {developer_name} w {year} r.'
+    title_en: str = "Offer prices of apartments of developer {developer_name} in {year}."
     description_pl: str = (
         'Zbiór danych zawiera informacje o cenach ofertowych mieszkań '
-        'dewelopera {developer} udostępniane zgodnie z art. 19b. ust. 1 Ustawy '
+        'dewelopera {developer_name} udostępniane zgodnie z art. 19b. ust. 1 Ustawy '
         'z dnia 20 maja 2021 r. o ochronie praw nabywcy lokalu mieszkalnego '
         'lub domu jednorodzinnego oraz Deweloperskim Funduszu Gwarancyjnym '
         '(Dz. U. z 2024 r. poz. 695).'
     )
     description_en: str = (
         'The dataset contains information on offer prices of apartments of the '
-        'developer {developer} made available in accordance with art. 19b. ust. 1 '
+        'developer {developer_name} made available in accordance with art. 19b. ust. 1 '
         'Ustawy z dnia 20 maja 2021 r. o ochronie praw nabywcy lokalu '
         'mieszkalnego lub domu jednorodzinnego oraz Deweloperskim Funduszu '
         'Gwarancyjnym (Dz. U. z 2024 r. poz. 695).'
@@ -46,18 +46,18 @@ class Dataset:
     # Constants
     status: str = 'published'
     extIdent: str = 'ARCUS2025'
-    title_pl: str = 'Ceny ofertowe mieszkań dewelopera {developer} w {year} r.'
-    title_en: str = "Offer prices of apartments of developer {developer} in {year}."
+    title_pl: str = 'Ceny ofertowe mieszkań dewelopera {developer_name} w {year} r.'
+    title_en: str = "Offer prices of apartments of developer {developer_name} in {year}."
     description_pl: str = (
         'Zbiór danych zawiera informacje o cenach ofertowych mieszkań '
-        'dewelopera {developer} udostępniane zgodnie z art. 19b. ust. 1 Ustawy '
+        'dewelopera {developer_name} udostępniane zgodnie z art. 19b. ust. 1 Ustawy '
         'z dnia 20 maja 2021 r. o ochronie praw nabywcy lokalu mieszkalnego '
         'lub domu jednorodzinnego oraz Deweloperskim Funduszu Gwarancyjnym '
         '(Dz. U. z 2024 r. poz. 695).'
     )
     description_en: str = (
         'The dataset contains information on offer prices of apartments of the '
-        'developer {developer} made available in accordance with art. 19b. ust. 1 '
+        'developer {developer_name} made available in accordance with art. 19b. ust. 1 '
         'Ustawy z dnia 20 maja 2021 r. o ochronie praw nabywcy lokalu '
         'mieszkalnego lub domu jednorodzinnego oraz Deweloperskim Funduszu '
         'Gwarancyjnym (Dz. U. z 2024 r. poz. 695).'
