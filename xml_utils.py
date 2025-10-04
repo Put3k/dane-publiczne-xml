@@ -79,10 +79,6 @@ class Resource:
 
 
 def load_xsd(xsd_url: str) -> ET.XMLSchema:
-    """
-    Pobiera schemat XSD z URL i zwraca obiekt XMLSchema.
-    (Możesz też zamiast URL podać lokalną ścieżkę do pliku .xsd.)
-    """
     resp = requests.get(xsd_url)
     resp.raise_for_status()
     xsd_doc = ET.XML(resp.content)
@@ -91,14 +87,9 @@ def load_xsd(xsd_url: str) -> ET.XMLSchema:
 
 
 def validate_xml_against_schema(xml_doc) -> bool:
-    """
-    Waliduje plik XML względem podanego schematu.
-    Zwraca True, jeśli walidacja przeszła, inaczej podnosi wyjątek z informacją.
-    """
     schema = load_xsd('https://www.dane.gov.pl/static/xml/otwarte_dane_latest.xsd')
     valid = schema.validate(xml_doc)
     if not valid:
-        # zbierz błędy
         errors = []
         for error in schema.error_log:
             errors.append(f'Line {error.line}, Column {error.column}: {error.message}')
