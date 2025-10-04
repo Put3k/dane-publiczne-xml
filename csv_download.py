@@ -1,17 +1,12 @@
 #!/usr/bin/env python3
-"""
+'''
 download_drive_csv.py
-
-Pobiera prywatny plik (np. CSV) z Google Drive używając service account.
-Użycie:
-  ./download_drive_csv.py --key /path/to/sa-key.json --file-id FILE_ID --out /tmp/data.csv
 
 Plik service account JSON powinien być pobrany z Google Cloud Console.
 Plik na Drive musi być udostępniony (viewer) temu service account email.
-"""
+'''
 
 import io
-import argparse
 import sys
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
@@ -31,8 +26,6 @@ def download_file(sa_json_path, file_id, out_path):
     )
 
     try:
-        # Pobieramy zawartość pliku (works for binary files stored on Drive, e.g. CSV)
-        # request = service.files().get_media(fileId=file_id)
         request = service.files().export(fileId=file_id, mimeType='text/csv')
         fh = io.FileIO(out_path, 'wb')
         downloader = MediaIoBaseDownload(fh, request)
@@ -52,25 +45,6 @@ def download_file(sa_json_path, file_id, out_path):
     except Exception as e:
         print("Nieoczekiwany błąd:", e, file=sys.stderr)
         raise
-
-
-def main():
-    p = argparse.ArgumentParser(
-        description="Pobierz plik z Google Drive (service account)"
-    )
-    p.add_argument(
-        '--key', required=True, help='Ścieżka do JSON key service account'
-    )
-    p.add_argument(
-        '--file-id',
-        required=True,
-        help='ID pliku na Google Drive (długie id w URL)',
-    )
-    p.add_argument(
-        '--out', required=True, help='Ścieżka docelowa zapisu, np /tmp/data.csv'
-    )
-    args = p.parse_args()
-    download_file(args.key, args.file_id, args.out)
 
 
 if __name__ == '__main__':
