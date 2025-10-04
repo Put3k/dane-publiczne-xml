@@ -36,14 +36,11 @@ def download_file(sa_json_path, file_id, out_path):
             if status:
                 # pokazujemy postęp (0.0 - 1.0)
                 pct = int(status.progress() * 100)
-                print(f"Postęp: {pct}%")
-        print(f"Pobrano plik i zapisano do: {out_path}")
 
+    #TODO: add logging?
     except HttpError as e:
-        print("Błąd HTTP przy pobieraniu pliku:", e, file=sys.stderr)
         raise
     except Exception as e:
-        print("Nieoczekiwany błąd:", e, file=sys.stderr)
         raise
 
 
