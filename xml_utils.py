@@ -108,8 +108,6 @@ def parse_resources(filepath: str) -> List[Resource]:
     tree = ET.parse(filepath)
     root = tree.getroot()
 
-    ns = {'h': 'urn:otwarte-dane:harvester:1.13'}
-
     resources: List[Resource] = []
     for res in root.findall('.//resource'):
         r = Resource(
@@ -142,14 +140,10 @@ def create_dataset_with_resources(xml_filepath: str, xsd_url: str) -> Dataset:
     schema = load_xsd(xsd_url)
     validate_xml_against_schema(xml_filepath, schema)
 
-    resources = parse_resources(xml_filepath)
-
-    # 3) utwórz instancję Dataset (stałe pola) + dodaj zasoby
     ds = Dataset()
+    ds.resources = parse_resources(xml_filepath)
     return ds
 
-
-# ======= PRZYKŁAD =======
 
 if __name__ == '__main__':
     filepath = 'Przykład_3_kolejne_publikacje_v.1.13_21.08.2025.xml'
