@@ -22,7 +22,7 @@ SCOPES = ['https://www.googleapis.com/auth/drive.readonly']
 API_SERVICE = 'drive'
 API_VERSION = 'v3'
 
-def download_file(sa_json_path: str, file_id: str, out_path: str):
+def download_file(sa_json_path, file_id, out_path):
     creds = service_account.Credentials.from_service_account_file(
         sa_json_path, scopes=SCOPES
     )
@@ -74,15 +74,19 @@ def main():
 
 
 if __name__ == '__main__':
-    # main()
     from datetime import datetime
-    import os
-    base_path_public_path = '/home/kacper/projects/dane-publiczne'
-    today = datetime.today().strftime('%Y-%m-%d')
-    file_name = f'ceny-ofertowe-mieszkan-dewelopera-arcus-{today}.csv'
-    file_path = os.path.join(base_path_public_path, file_name)
+    from pathlib import Path
+    today = datetime.today()
+
+    path = f'/home/dane-publiczne/data/dane-publiczne/{today.strftime("%Y/%m")}'
+    path = Path(path)
+    path.mkdir(parents=True, exist_ok=True)
+
+    file_name = f'arcus-{today.day}.csv'
+    file_path = path / file_name
+
     download_file(
-        sa_json_path='/home/kacper/projects/dane-publiczne/pod-manage-db493003b6e1.json',
+        sa_json_path='/home/dane-publiczne/script/pod-manage-db493003b6e1.json',
         file_id='1PtFy7D19QbFlH5sBajwTNrDj6MCLFjct3EaijxzctNo',
         out_path=file_path
     )
