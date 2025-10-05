@@ -6,15 +6,15 @@ from pathlib import Path
 from lxml import etree as ET
 
 from csv_download import download_file
+from settings import (
+    BASE_PUBLIC_DATA_PATH,
+    CSV_FILE_ID,
+    DEVELOPER_DATA,
+    SA_PATH,
+    XML_PATH,
+)
 from xml_utils import Resource, validate_xml_against_schema
 
-SA_PATH = Path(
-    '/home/kacper/projects/dane-publiczne/pod-manage-db493003b6e1.json'
-)
-CSV_FILE_ID='1PtFy7D19QbFlH5sBajwTNrDj6MCLFjct3EaijxzctNo'
-BASE_PUBLIC_DATA_PATH = Path('/home/kacper/projects/dane-publiczne/test')
-XML_PATH = Path('/home/kacper/projects/dane-publiczne/test/ARCUS.xml')
-DEVELOPER_DATA = dict(name='Arcus Development Sp. z o.o.', id='ARCUS')
 
 def file_md5_checksum(file_path):
     hash_md5 = hashlib.md5()
@@ -48,7 +48,7 @@ def main():
         file_id=CSV_FILE_ID,
         out_path=download_dest_path,
     )
-    csv_url = csv_public_url_get(f'{relative_ym_path}/{file_name}')
+    csv_url = csv_public_url_get(f'dane-publiczne/{relative_ym_path}/{file_name}')
 
     # INFO: XML
     tree = ET.parse(XML_PATH)
