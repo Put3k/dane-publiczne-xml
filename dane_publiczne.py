@@ -96,4 +96,8 @@ def main():
 
 
 if __name__ == '__main__':
+    #TODO: add logging
+    t_marker = datetime.today().strftime('%Y-%m-%d %H:%M:%S')
+    print(f'{t_marker} - START')
     main()
+    print(f'{t_marker} - FINISH')
