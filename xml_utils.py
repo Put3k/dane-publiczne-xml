@@ -3,9 +3,6 @@ from lxml import etree as ET
 from dataclasses import dataclass, field
 from typing import List
 
-# ======= MODELE =======
-
-DEWELOPER_NAZWA = 'Arcus Development Sp. z o.o.'
 
 @dataclass
 class Resource:

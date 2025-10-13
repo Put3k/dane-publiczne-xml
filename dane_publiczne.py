@@ -1,17 +1,15 @@
 import hashlib
 import os
+import json
 from datetime import datetime
-from pathlib import Path
 
 from lxml import etree as ET
 
 from csv_download import download_file
 from settings import (
     BASE_PUBLIC_DATA_PATH,
-    CSV_FILE_ID,
-    DEVELOPER_DATA,
-    SA_PATH,
-    XML_PATH,
+    DEVELOPERS_JSON_PATH,
+    DRIVE_KEYS,
 )
 from xml_utils import Resource, validate_xml_against_schema
 
@@ -32,8 +30,17 @@ def csv_public_url_get(file_path):
     return url
 
 
-def main():
+def developer_data_get(developer_code):
+    with open(DEVELOPERS_JSON_PATH, 'r') as f:
+        f_str = f.read()
+        data = json.loads(f_str)[developer_code.upper()]
+    return data
+
+
+def developer_data_generate(developer_code):
     today = datetime.today().date()
+    code = developer_code.lower()
+    dev_data = developer_data_get(code)
 
     # INFO: Paths
     relative_ym_path = today.strftime('%Y/%m')
@@ -41,17 +48,20 @@ def main():
     abs_dir_path.mkdir(parents=True, exist_ok=True)
 
     # INFO: Download
-    file_name = f'arcus-{today.day}.csv'
+    file_name = f'{code}-{today.day}.csv'
     download_dest_path = BASE_PUBLIC_DATA_PATH / relative_ym_path / file_name
     download_file(
-        sa_json_path=SA_PATH,
-        file_id=CSV_FILE_ID,
+        sa_json_path=DRIVE_KEYS / dev_data['sa_file_name'],
+        file_id=dev_data['csv_file_id'],
         out_path=download_dest_path,
     )
     csv_url = csv_public_url_get(f'dane-publiczne/{relative_ym_path}/{file_name}')
 
     # INFO: XML
-    tree = ET.parse(XML_PATH)
+    #TODO: MVP - if xml does not exist, create and fill using BASE.xml
+    xml_filename = f'{code.upper()}.xml'
+    xml_public_path = BASE_PUBLIC_DATA_PATH / xml_filename
+    tree = ET.parse(xml_public_path)
     root = tree.getroot()
 
     resources = root.find('.//resources')
@@ -64,10 +74,10 @@ def main():
         status='published',
         extIdent=iso_date,
         url=csv_url,
-        title_pl=f'Ceny ofertowe mieszkań dewelopera {DEVELOPER_DATA["name"]} {iso_date}',
-        title_en=f'Offer prices for developer\'s apartments {DEVELOPER_DATA["name"]} {iso_date}',
-        description_pl=f'Dane dotyczące cen ofertowych mieszkań {DEVELOPER_DATA["name"]} z dnia {iso_date}.',
-        description_en=f'Data on offer prices of apartments {DEVELOPER_DATA["name"]} as of {iso_date}.',
+        title_pl=f'Ceny ofertowe mieszkań dewelopera {dev_data["name"]} {iso_date}',
+        title_en=f'Offer prices for developer\'s apartments {dev_data["name"]} {iso_date}',
+        description_pl=f'Dane dotyczące cen ofertowych mieszkań {dev_data["name"]} z dnia {iso_date}.',
+        description_en=f'Data on offer prices of apartments {dev_data["name"]} as of {iso_date}.',
         availability='local',
         dataDate=iso_date,
         specialSigns=['X'],
@@ -83,20 +93,24 @@ def main():
     ET.indent(root, space='    ')
     validate_xml_against_schema(tree)
 
-    xml_filename = f'{DEVELOPER_DATA["id"]}.xml'
-    xml_public_path = BASE_PUBLIC_DATA_PATH / xml_filename
     tree.write(xml_public_path, encoding='utf-8', xml_declaration=True)
 
     # INFO: checksum
     checksum = file_md5_checksum(xml_public_path)
-    checksum_filename = f'{DEVELOPER_DATA["id"]}.md5'
+    checksum_filename = f'{code}.md5'
     checksum_public_path = BASE_PUBLIC_DATA_PATH / checksum_filename
     with open(checksum_public_path, 'w') as f:
         f.write(checksum)
 
 
+def main():
+    for code in ['ARCUS', 'KAKTUS']:
+        developer_data_generate(code)
+
+
 if __name__ == '__main__':
     #TODO: add logging
+    os.environ['HTTP_HOST'] = 'https://test.website.pl'
     t_marker = datetime.today().strftime('%Y-%m-%d %H:%M:%S')
     print(f'{t_marker} - START')
     main()
