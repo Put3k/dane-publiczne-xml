@@ -13,7 +13,7 @@ from settings import (
     DEVELOPERS_JSON_PATH,
     DRIVE_KEYS,
 )
-from xml_utils import Resource, validate_xml_against_schema
+from xml_utils import Resource, resource_exists, validate_xml_against_schema
 
 
 log_handler = RotatingFileHandler(
@@ -54,7 +54,16 @@ def csv_public_url_get(file_path):
     return url
 
 
+def developer_list_get():
+    #TODO: DRY
+    with open(DEVELOPERS_JSON_PATH, 'r') as f:
+        f_str = f.read()
+        data = json.loads(f_str)
+    return data.keys()
+
+
 def developer_data_get(developer_code):
+    #TODO: DRY
     with open(DEVELOPERS_JSON_PATH, 'r') as f:
         f_str = f.read()
         data = json.loads(f_str)[developer_code.upper()]
@@ -65,24 +74,8 @@ def developer_data_generate(developer_code):
     logger.info(f'start processing: {developer_code}')
     today = datetime.today().date()
     code = developer_code.lower()
-    dev_data = developer_data_get(code)
 
-    # INFO: Paths
-    relative_ym_path = today.strftime('%Y/%m')
-    abs_dir_path = BASE_PUBLIC_DATA_PATH / relative_ym_path
-    abs_dir_path.mkdir(parents=True, exist_ok=True)
-
-    # INFO: Download
-    file_name = f'{code}-{today.day}.csv'
-    download_dest_path = BASE_PUBLIC_DATA_PATH / relative_ym_path / file_name
-    download_file(
-        sa_json_path=DRIVE_KEYS / dev_data['sa_file_name'],
-        file_id=dev_data['csv_file_id'],
-        out_path=download_dest_path,
-    )
-    csv_url = csv_public_url_get(f'dane-publiczne/{relative_ym_path}/{file_name}')
-
-    # INFO: XML
+    # INFO: XML - Load and validate
     #TODO: MVP - if xml does not exist, create and fill using BASE.xml
     xml_filename = f'{code.upper()}.xml'
     xml_public_path = BASE_PUBLIC_DATA_PATH / xml_filename
@@ -94,7 +87,31 @@ def developer_data_generate(developer_code):
         msg = 'No resources in ElementTree'
         raise ValueError(msg)
 
+    # INFO: Validate resource exists
     iso_date = today.isoformat()
+    if resource_exists(resources, iso_date):
+        logger.info(
+            f'skip processing: {developer_code} - resource "{iso_date}" already exists'
+        )
+        return
+
+    # INFO: Paths
+    relative_ym_path = today.strftime('%Y/%m')
+    abs_dir_path = BASE_PUBLIC_DATA_PATH / relative_ym_path
+    abs_dir_path.mkdir(parents=True, exist_ok=True)
+
+    # INFO: Download
+    file_name = f'{code}-{today.day}.csv'
+    download_dest_path = BASE_PUBLIC_DATA_PATH / relative_ym_path / file_name
+    dev_data = developer_data_get(code)
+    download_file(
+        sa_json_path=DRIVE_KEYS / dev_data['sa_file_name'],
+        file_id=dev_data['csv_file_id'],
+        out_path=download_dest_path,
+    )
+    csv_url = csv_public_url_get(f'dane-publiczne/{relative_ym_path}/{file_name}')
+
+    # INFO: XML - Fill
     new_resource = Resource(
         status='published',
         extIdent=iso_date,
@@ -131,7 +148,7 @@ def developer_data_generate(developer_code):
 
 def main():
     logger.info('START')
-    for code in ['ARCUS', 'KAKTUS']:
+    for code in developer_list_get():
         developer_data_generate(code)
     logger.info('FINISED')
 

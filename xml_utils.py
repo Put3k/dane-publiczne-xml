@@ -75,6 +75,14 @@ class Resource:
         return res_el
 
 
+def resource_exists(resources: ET.Element, identifier: str):
+    for res in resources.findall('resource'):
+        ext_ident = res.find('extIdent').text
+        if ext_ident == identifier:
+            return True
+    return False
+
+
 def load_xsd(xsd_url: str) -> ET.XMLSchema:
     resp = requests.get(xsd_url)
     resp.raise_for_status()
