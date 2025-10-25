@@ -12,12 +12,13 @@ from settings import (
     BASE_PUBLIC_DATA_PATH,
     DEVELOPERS_JSON_PATH,
     DRIVE_KEYS,
+    BASE_DIR
 )
 from xml_utils import Resource, resource_exists, validate_xml_against_schema
 
 
 log_handler = RotatingFileHandler(
-    filename='cache/dane-publiczne.log',
+    filename=BASE_DIR / 'cache/dane-publiczne.log',
     mode='a',
     maxBytes=5 * 1024 * 1024,
     backupCount=4,
@@ -139,7 +140,7 @@ def developer_data_generate(developer_code):
 
     # INFO: checksum
     checksum = file_md5_checksum(xml_public_path)
-    checksum_filename = f'{code}.md5'
+    checksum_filename = f'{code.upper()}.md5'
     checksum_public_path = BASE_PUBLIC_DATA_PATH / checksum_filename
     with open(checksum_public_path, 'w') as f:
         f.write(checksum)
