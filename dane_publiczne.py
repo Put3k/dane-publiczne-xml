@@ -1,6 +1,8 @@
 import hashlib
 import os
 import json
+import logging
+from logging.handlers import RotatingFileHandler
 from datetime import datetime
 
 from lxml import etree as ET
@@ -12,6 +14,28 @@ from settings import (
     DRIVE_KEYS,
 )
 from xml_utils import Resource, validate_xml_against_schema
+
+
+log_handler = RotatingFileHandler(
+    filename='cache/dane-publiczne.log',
+    mode='a',
+    maxBytes=5 * 1024 * 1024,
+    backupCount=4,
+    encoding='utf-8',
+)
+log_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+log_handler.setFormatter(log_formatter)
+
+logger = logging.getLogger('root')
+logger.setLevel(logging.INFO)
+logger.addHandler(log_handler)
+
+
+
+logging.basicConfig(
+    filename='cache/dane-publiczne.log', encoding='utf-8', level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
 
 
 def file_md5_checksum(file_path):
@@ -38,6 +62,7 @@ def developer_data_get(developer_code):
 
 
 def developer_data_generate(developer_code):
+    logger.info(f'start processing: {developer_code}')
     today = datetime.today().date()
     code = developer_code.lower()
     dev_data = developer_data_get(code)
@@ -101,17 +126,16 @@ def developer_data_generate(developer_code):
     checksum_public_path = BASE_PUBLIC_DATA_PATH / checksum_filename
     with open(checksum_public_path, 'w') as f:
         f.write(checksum)
+    logger.info(f'finished processing: {developer_code}')
 
 
 def main():
+    logger.info('START')
     for code in ['ARCUS', 'KAKTUS']:
         developer_data_generate(code)
+    logger.info('FINISED')
 
 
 if __name__ == '__main__':
-    #TODO: add logging
     os.environ['HTTP_HOST'] = 'https://test.website.pl'
-    t_marker = datetime.today().strftime('%Y-%m-%d %H:%M:%S')
-    print(f'{t_marker} - START')
     main()
-    print(f'{t_marker} - FINISH')
