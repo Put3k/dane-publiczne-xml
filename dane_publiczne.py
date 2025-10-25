@@ -155,5 +155,4 @@ def main():
 
 
 if __name__ == '__main__':
-    os.environ['HTTP_HOST'] = 'https://test.website.pl'
     main()
