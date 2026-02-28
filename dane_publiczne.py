@@ -14,7 +14,13 @@ from settings import (
     DRIVE_KEYS,
     BASE_DIR
 )
-from xml_utils import Resource, resource_exists, validate_xml_against_schema
+from xml_utils import (
+    Resource,
+    Dataset,
+    resource_exists,
+    dataset_find,
+    validate_xml_against_schema,
+)
 
 
 log_handler = RotatingFileHandler(
@@ -71,9 +77,8 @@ def developer_data_get(developer_code):
     return data
 
 
-def developer_data_generate(developer_code):
+def developer_data_generate(developer_code, date=datetime.today().date()):
     logger.info(f'start processing: {developer_code}')
-    today = datetime.today().date()
     code = developer_code.lower()
 
     # INFO: XML - Load and validate
@@ -81,15 +86,36 @@ def developer_data_generate(developer_code):
     xml_filename = f'{code.upper()}.xml'
     xml_public_path = BASE_PUBLIC_DATA_PATH / xml_filename
     tree = ET.parse(xml_public_path)
-    root = tree.getroot()
+    datasets = tree.getroot()
 
-    resources = root.find('.//resources')
+    dev_data = developer_data_get(code)
+
+    # INFO: dataset creation if needed - MVP - use xmls data and work on objects
+    dataset_identifier = Dataset.ext_ident.format(
+        developer_code=developer_code, year=date.year
+    )
+    if not dataset_find(datasets, dataset_identifier):
+        # create dataset dataclass
+        new_dataset = Dataset(
+            developer_code=developer_code,
+            developer_name=dev_data['name'],
+            year=date.year,
+        )
+        datasets.append(new_dataset.to_etree_element())
+
+
+    # dataset Element
+    dataset = dataset_find(datasets, dataset_identifier)
+    if dataset is None:
+        raise ValueError('Dataset does not exists!')
+
+    resources = dataset.find('./resources')
     if resources is None:
         msg = 'No resources in ElementTree'
         raise ValueError(msg)
 
     # INFO: Validate resource exists
-    iso_date = today.isoformat()
+    iso_date = date.isoformat()
     if resource_exists(resources, iso_date):
         logger.info(
             f'skip processing: {developer_code} - resource "{iso_date}" already exists'
@@ -97,14 +123,13 @@ def developer_data_generate(developer_code):
         return
 
     # INFO: Paths
-    relative_ym_path = today.strftime('%Y/%m')
-    abs_dir_path = BASE_PUBLIC_DATA_PATH / relative_ym_path
+    relative_ym_path = date.strftime('%Y/%m')
+    abs_dir_path = BASE_PUBLIC_DATA_PATH / code / relative_ym_path
     abs_dir_path.mkdir(parents=True, exist_ok=True)
 
     # INFO: Download
-    file_name = f'{code}-{today.day}.csv'
-    download_dest_path = BASE_PUBLIC_DATA_PATH / relative_ym_path / file_name
-    dev_data = developer_data_get(code)
+    file_name = f'{date.day}.csv'
+    download_dest_path = abs_dir_path / file_name
     download_file(
         sa_json_path=DRIVE_KEYS / dev_data['sa_file_name'],
         file_id=dev_data['csv_file_id'],
@@ -133,7 +158,7 @@ def developer_data_generate(developer_code):
     resource_element = new_resource.to_etree_element()
     resources.append(resource_element)
 
-    ET.indent(root, space='    ')
+    ET.indent(datasets, space='    ')
     validate_xml_against_schema(tree)
 
     tree.write(xml_public_path, encoding='utf-8', xml_declaration=True)
@@ -150,6 +175,7 @@ def developer_data_generate(developer_code):
 def main():
     logger.info('START')
     for code in developer_list_get():
+        logger.info(f'GENERATE: {code}')
         developer_data_generate(code)
     logger.info('FINISED')
 
