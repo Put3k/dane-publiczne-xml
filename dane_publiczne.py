@@ -135,7 +135,7 @@ def developer_data_generate(developer_code, date=datetime.today().date()):
         file_id=dev_data['csv_file_id'],
         out_path=download_dest_path,
     )
-    csv_url = csv_public_url_get(f'dane-publiczne/{relative_ym_path}/{file_name}')
+    csv_url = csv_public_url_get(f'dane-publiczne/{code}/{relative_ym_path}/{file_name}')
 
     # INFO: XML - Fill
     new_resource = Resource(
