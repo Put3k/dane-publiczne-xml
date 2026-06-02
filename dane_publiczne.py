@@ -173,6 +173,8 @@ def developer_data_generate(developer_code, date=datetime.today().date()):
 
 
 def main():
+    if os.geteuid() == 0:
+        raise ValueError('DONT RUN AS ROOT')
     logger.info('START')
     for code in developer_list_get():
         logger.info(f'GENERATE: {code}')
