@@ -1,13 +1,16 @@
 import hashlib
 import os
+import sys
 import json
 import logging
+import traceback
 from logging.handlers import RotatingFileHandler
 from datetime import datetime
 
 from lxml import etree as ET
 
 from csv_download import download_file
+from mailer import Status, DeveloperResult, send_run_summary
 from settings import (
     BASE_PUBLIC_DATA_PATH,
     DEVELOPERS_JSON_PATH,
@@ -120,7 +123,7 @@ def developer_data_generate(developer_code, date=datetime.today().date()):
         logger.info(
             f'skip processing: {developer_code} - resource "{iso_date}" already exists'
         )
-        return
+        return Status.SKIPPED
 
     # INFO: Paths
     relative_ym_path = date.strftime('%Y/%m')
@@ -170,16 +173,31 @@ def developer_data_generate(developer_code, date=datetime.today().date()):
     with open(checksum_public_path, 'w') as f:
         f.write(checksum)
     logger.info(f'finished processing: {developer_code}')
+    return Status.PROCESSED
 
 
 def main():
     if os.geteuid() == 0:
         raise ValueError('DONT RUN AS ROOT')
     logger.info('START')
+    results = []
     for code in developer_list_get():
         logger.info(f'GENERATE: {code}')
-        developer_data_generate(code)
+        try:
+            status = developer_data_generate(code)
+            results.append(DeveloperResult(code=code, status=status))
+        except Exception:
+            error = traceback.format_exc()
+            logger.error(f'FAILED: {code}\n{error}')
+            results.append(
+                DeveloperResult(code=code, status=Status.FAILED, error=error)
+            )
     logger.info('FINISED')
+
+    send_run_summary(results)
+
+    if any(r.status is Status.FAILED for r in results):
+        sys.exit(1)
 
 
 if __name__ == '__main__':
