@@ -9,6 +9,7 @@ from lxml import etree as ET
 
 from csv_download import download_file
 from settings import (
+    HTTP_HOST,
     BASE_PUBLIC_DATA_PATH,
     DEVELOPERS_JSON_PATH,
     DRIVE_KEYS,
@@ -54,10 +55,9 @@ def file_md5_checksum(file_path):
 
 
 def csv_public_url_get(file_path):
-    host = os.environ['HTTP_HOST']
-    if not host:
+    if not HTTP_HOST:
         raise ValueError('missing HTTP_HOST env variable')
-    url = f'{host}/{file_path}'
+    url = f'{HTTP_HOST}/{file_path}'
     return url
 
 
